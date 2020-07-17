@@ -130,15 +130,7 @@ d3.csv(DATA_URL).then((csv) => {
         d3.axisLeft(y) // https://github.com/d3/d3-axis/blob/v1.0.12/README.md#axisLeft
       )
       .call((g) => g.select(".domain")) //.remove() to remove yAxis line
-      .call((g) =>
-        g
-          .select(".tick:last-of-type text")
-          .clone()
-          .attr("x", 5)
-          .attr("text-anchor", "start")
-          .attr("font-weight", "bold")
-          .text(data.y)
-      );
+      
   }
 
   // Line
@@ -209,6 +201,7 @@ d3.csv(DATA_URL).then((csv) => {
       const mouse = d3.mouse(this); // https://github.com/d3/d3-selection#mouse
       const xm = x.invert(mouse[0]);
       const ym = y.invert(mouse[1]);
+
       const i1 = d3.bisectLeft(data.dates, xm, 1); // https://github.com/d3/d3-array#bisectLeft
       const i0 = i1 - 1;
       const i = xm - data.dates[i0] > data.dates[i1] - xm ? i1 : i0;
@@ -244,7 +237,14 @@ d3.csv(DATA_URL).then((csv) => {
       dot.attr("display", "none");
       tooltip.call(callout, null);
     }
-  }
+
+
+    /*
+    if(y>hjsdhf) {
+      askjhfdjhag.attr('transform', 'scale(1,-1)'). 
+    }
+    */
+  } 
 
   // https://observablehq.com/@d3/line-chart-with-tooltip
   function callout(g, value, color) {

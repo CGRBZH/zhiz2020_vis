@@ -82,7 +82,7 @@ d3.csv(DATA_URL).then((csv) => {
   // Dimension
   let width;
   const height = 500;
-  const margin = { top: 20, right: 90, bottom: 70, left: 90 };
+  const margin = { top: 20, right: 90, bottom: 75, left: 90 };
 
   // Scale
   // https://github.com/d3/d3-scale/blob/v2.2.2/README.md#scaleUtc
@@ -90,12 +90,10 @@ d3.csv(DATA_URL).then((csv) => {
   // https://github.com/d3/d3-scale/blob/v2.2.2/README.md#scaleLinear
   const y = d3
     .scaleLinear()
-    .domain([
-      d3.min(data.series, (d) => d3.min(d.values)), // https://github.com/d3/d3-array/blob/v1.2.4/README.md#min
-      d3.max(data.series, (d) => d3.max(d.values)), // https://github.com/d3/d3-array/blob/v1.2.4/README.md#max
-    ])
-    .nice()
-    .range([height - margin.bottom, margin.top]);
+    //.domain([0, d3.max(data.series, (d) => d3.max(d.values)), // https://github.com/d3/d3-array/blob/v1.2.4/README.md#max
+    //]) // .domain() is the complete set of values
+    .range([height - margin.bottom, margin.top]); // The range is the set of resulting values of a function
+  
   // https://github.com/d3/d3-scale/blob/v2.2.2/README.md#scaleOrdinal
   const color = d3
     .scaleOrdinal()
@@ -118,22 +116,16 @@ d3.csv(DATA_URL).then((csv) => {
         .tickSizeOuter(0)
     );
   }
+  
   function yAxis(g) {
+
     g.attr("transform", `translate(${margin.left},0)`)
       .call(
         d3.axisLeft(y) // https://github.com/d3/d3-axis/blob/v1.0.12/README.md#axisLeft
       )
       .call((g) => g.select(".domain")) //.remove() to remove yAxis line
-      .call((g) =>
-        g
-          .select(".tick:last-of-type text")
-          .clone()
-          .attr("x", 5)
-          .attr("text-anchor", "start")
-          .attr("font-weight", "bold")
-          .text(data.y)
-      );
   }
+
 
   // Line
   // https://github.com/d3/d3-shape/blob/v1.3.7/README.md#line
@@ -150,7 +142,8 @@ d3.csv(DATA_URL).then((csv) => {
 
   // Render chart
   const gXAxis = svg.append("g");
-  svg.append("g").call(yAxis);
+  svg.append("g").attr('id', 'yAxis').call(yAxis);
+
   const path = svg
     .append("g")
     .attr("fill", "none")
@@ -160,11 +153,22 @@ d3.csv(DATA_URL).then((csv) => {
     .selectAll("path")
     .data(data.series)
     .join("path")
+    .attr('class', 'linien')
     .style("mix-blend-mode", "multiply")
     .attr("stroke", (d) => color(d.name))
     .attr("d", (d) => line(d.values));
 
-  svg.call(hover, path);
+  const yTitle = svg
+  	.append("g")
+  	.append("text")
+  	.attr("text-anchor", "end")
+    .attr("transform", `translate(${margin.left},0)`)
+    .attr("transform", `rotate(-90)`)
+    .attr("dx", "-1em")
+    .attr("dy", "3em")
+    .text(data.y);
+
+  svg.call(hover, path, yTitle);
   const tooltip = svg.append("g").attr("class", "tooltip");
 
   // Render legend
@@ -179,23 +183,25 @@ d3.csv(DATA_URL).then((csv) => {
     .on("click", toggleRegion);
 
   // Start with Kanton Zürich selected
-  toggleRegion("Kanton Zürich");
+  toggleRegion("Elektrisch");
 
   resize();
+  
   window.addEventListener("resize", resize);
+  
   function resize() {
     width = container.node().clientWidth;
     svg.attr("viewBox", [0, 0, width, height]);
     x.range([margin.left, width - margin.right]);
     gXAxis.call(xAxis);
+
     path.attr("d", (d) => line(d.values));
   }
 
   function hover(svg, path) {
+
     svg.on("mousemove", moved).on("mouseenter", entered).on("mouseleave", left);
-
     const dot = svg.append("g").attr("display", "none");
-
     dot.append("circle").attr("r", 3.5);
 
     function moved() {
@@ -233,12 +239,13 @@ d3.csv(DATA_URL).then((csv) => {
     function entered() {
       dot.attr("display", null);
     }
-
     function left() {
       dot.attr("display", "none");
       tooltip.call(callout, null);
     }
+
   }
+
 
   // https://observablehq.com/@d3/line-chart-with-tooltip
   function callout(g, value, color) {
@@ -270,6 +277,7 @@ d3.csv(DATA_URL).then((csv) => {
 
     const { x, y, width: w, height: h } = text.node().getBBox(); // https://developer.mozilla.org/en-US/docs/Web/API/SVGGraphicsElement/getBBox
 
+
     text.attr("transform", `translate(${-w / 2},${15 - y})`);
     path.attr(
       "d",
@@ -281,6 +289,31 @@ d3.csv(DATA_URL).then((csv) => {
     // toggle selected
     selectedRegions[region] = !selectedRegions[region];
 
+    //Filter Data
+  	dataFiltered = data.series.filter(el => selectedRegions[el.name]);    //max der gefilterten Daten
+  	yMaxFiltered = d3.max(dataFiltered, region => d3.max(region.values));    //y Skala der gefilterten Daten
+
+  	if (!yMaxFiltered) {
+  		yMaxFiltered =d3.max(data.series, (d) => d3.max(d.values));
+  	}
+  	y.domain([
+    0,
+    yMaxFiltered,
+  	]).nice();   
+
+    console.log(yMaxFiltered);
+
+    resize();
+
+    svg.selectAll('.linien')
+    	.transition()
+    	.attr("d", (d) => line(d.values));
+
+    //Aktualisierung der y Achse
+    d3.select('#yAxis')
+    	.transition()
+    .call(yAxis);
+
     // Update legend
     swatch.style("--fill-color", (d) => {
       if (selectedRegions[d]) {
@@ -290,7 +323,7 @@ d3.csv(DATA_URL).then((csv) => {
       }
     });
 
-    // Update lines
+  	// Update lines
     path.attr("stroke", (d) => {
       if (selectedRegions[d.name]) {
         return color(d.name);

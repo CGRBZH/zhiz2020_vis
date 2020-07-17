@@ -44,14 +44,4 @@ body {
   /* https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties */
 }
 
-.tooltip {
-  position: absolute;
-  top: 0;
-  left: 0;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  background-color: rgba(255, 255, 255, 0.9);
-  pointer-events: none;
-  border-width: 1px;
-  border-style: solid;
-}
+
