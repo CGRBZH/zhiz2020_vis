@@ -82,7 +82,7 @@ d3.csv(DATA_URL).then((csv) => {
   // Dimension
   let width;
   const height = 500;
-  const margin = { top: 20, right: 90, bottom: 70, left: 90 };
+  const margin = { top: 20, right: 90, bottom: 75, left: 95 };
 
   // Scale
   // https://github.com/d3/d3-scale/blob/v2.2.2/README.md#scaleUtc
@@ -161,6 +161,16 @@ d3.csv(DATA_URL).then((csv) => {
     .style("mix-blend-mode", "multiply")
     .attr("stroke", (d) => color(d.name))
     .attr("d", (d) => line(d.values));
+
+  const yTitle = svg
+    .append("g")
+    .append("text")
+    .attr("text-anchor", "end")
+    .attr("transform", `translate(${margin.left},0)`)
+    .attr("transform", `rotate(-90)`)
+    .attr("dx", "-1em")
+    .attr("dy", "3em")
+    .text(data.y);  
 
   svg.call(hover, path);
   const tooltip = svg.append("g").attr("class", "tooltip");
